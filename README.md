@@ -27,11 +27,13 @@ This repository proves the ability to:
 *Terraform output displaying dynamic public IP assignment and tracked state resources.*
 
 ### 2. Live Web Server Verification
-![Apache Web Server](web-server-live.png)
+<img width="735" height="116" alt="web-server-live" src="https://github.com/user-attachments/assets/dff3a7ef-8315-409f-9be8-04a50e5a420b" />
+
 *Browser confirmation reaching the Apache web server provisioned dynamically via user_data.*
 
 ### 3. Automated Security Group Audit
-![Python Boto3 Security Audit](python-audit.png)
+<img width="784" height="152" alt="python-audit" src="https://github.com/user-attachments/assets/33bbfcfa-65c0-4c84-baf4-0f85dc048a75" />
+
 *Custom Python script auditing AWS Security Groups to identify and report public internet exposures.*
 
 ---
