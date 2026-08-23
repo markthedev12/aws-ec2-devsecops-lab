@@ -22,16 +22,14 @@ This repository proves the ability to:
 ## 📸 Proof of Execution
 
 ### 1. Terraform Deployment Success
-![Terraform Apply Output](docs/terraform-apply.png) 
-*Outputs showing the public IP and active state resources.*
+![Terraform Apply Output](<img width="775" height="271" alt="terraform-apply" src="https://github.com/user-attachments/assets/4423c3bc-d99b-4e57-b98a-70d007d7b7c0" />)
+
 
 ### 2. Live Web Server
-![Apache Web Server](docs/web-server-live.png)
-*Browser successfully accessing the Apache web server provisioned via user_data.*
+![Apache Web Server](your-exact-screenshot-name-2.png)
 
 ### 3. Boto3 Security Audit
-![Python Audit Script](docs/python-audit.png)
-*Python script querying security group permissions and auditing open ports.*
+![Python Audit Script](your-exact-screenshot-name-3.png)
 
 ---
 
