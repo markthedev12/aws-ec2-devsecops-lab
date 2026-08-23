@@ -22,7 +22,8 @@ This repository proves the ability to:
 ## 📸 Proof of Execution
 
 ### 1. Terraform Deployment & State Output
-![Terraform Outputs and State](terraform-apply.png)
+<img width="775" height="271" alt="terraform-apply" src="https://github.com/user-attachments/assets/0f6ba5c5-cc97-46a3-9dc4-e7824636f00b" />
+
 *Terraform output displaying dynamic public IP assignment and tracked state resources.*
 
 ### 2. Live Web Server Verification
