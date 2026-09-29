@@ -1,21 +1,27 @@
-# AWS EC2 Web Server Automation & Security Audit ☁️🔒
+# AWS EC2 DevSecOps Lab
 
-## Project Overview
-This project demonstrates Infrastructure as Code (IaC) and automated cloud security auditing. It provisions an automated web server on AWS using **Terraform** and validates the compliance of the deployed Security Groups using a custom **Python (Boto3)** script.
+Terraform provisions an EC2 web server on AWS, then a Python (boto3) script audits the deployed security groups and flags public internet exposure.
 
-This repository proves the ability to:
-- Translate cloud architecture into declarative HashiCorp Configuration Language (HCL).
-- Bootstrap EC2 instances automatically without manual SSH intervention using `user_data`.
-- Interact with AWS APIs using Python to enforce DevSecOps security baselines.
+> Personal lab project.
 
----
+## What it does
 
-## 🏗️ Architecture & Tech Stack
-- **Cloud Provider:** Amazon Web Services (AWS)
-- **Infrastructure as Code:** Terraform (`aws_instance`, `aws_security_group`, `data.aws_ami`)
-- **Configuration Management:** Bash (`user_data` bootstrapping)
-- **Security Auditing:** Python 3.12, AWS SDK for Python (`boto3`)
-- **Compute:** Amazon Linux 2023 (`t3.micro`)
+1. **Provision.** Terraform creates an Amazon Linux 2023 instance and its security group. A `user_data` script bootstraps the Apache web server automatically, so no manual SSH is needed.
+2. **Audit.** `audit_ec2.py` uses boto3 to inspect the deployed security groups and report rules that expose resources to the public internet.
+
+## Skills demonstrated
+
+* Translating cloud architecture into declarative HashiCorp Configuration Language (HCL)
+* Bootstrapping EC2 instances without manual SSH using `user_data`
+* Using the AWS API from Python to enforce a security baseline
+
+## Tech stack
+
+* **Cloud provider:** Amazon Web Services
+* **Infrastructure as code:** Terraform (`aws_instance`, `aws_security_group`, `data.aws_ami`)
+* **Bootstrapping:** Bash in `user_data`
+* **Security auditing:** Python 3.12, AWS SDK for Python (`boto3`)
+* **Compute:** Amazon Linux 2023 (`t3.micro`)
 
 ---
 
@@ -50,3 +56,33 @@ This repository proves the ability to:
 terraform init
 terraform plan
 terraform apply --auto-approve
+```
+
+### 3. Run the audit
+```bash
+pip install boto3
+python audit_ec2.py
+```
+
+### 4. Clean up
+```bash
+terraform destroy
+```
+Run this when you are finished so the instance does not keep running and incurring charges.
+
+---
+
+## What the audit reports
+
+Security group rules that expose resources to the public internet (`0.0.0.0/0`). Port 80 open to the world is expected for a public web server. Management ports such as SSH (22) and RDP (3389) open to the world are the findings that matter.
+
+## What I would do next
+
+- [ ] Run `terraform fmt`, `validate` and Checkov in GitHub Actions
+- [ ] Output audit results as JSON and Markdown
+- [ ] Exit with a failing status when risky rules are found, so CI can block on it
+- [ ] Add variables and outputs files so the configuration is reusable
+
+## Author
+
+Mark Schwinn · [Website](https://markschwinn.com) · [LinkedIn](https://www.linkedin.com/in/mark-schwinn-994625362/)
