@@ -1,88 +1,69 @@
 # AWS EC2 DevSecOps Lab
 
-Terraform provisions an EC2 web server on AWS, then a Python (boto3) script audits the deployed security groups and flags public internet exposure.
+Terraform provisions an Amazon Linux/Apache web server; a Python CLI checks
+security groups for internet-wide SSH and RDP exposure. A focused cloud lab,
+not a production web hosting architecture.
 
-> Personal lab project.
+## Architecture
 
-## What it does
+`Terraform -> EC2 + security group -> Apache on HTTP/80`
 
-1. **Provision.** Terraform creates an Amazon Linux 2023 instance and its security group. A `user_data` script bootstraps the Apache web server automatically, so no manual SSH is needed.
-2. **Audit.** `audit_ec2.py` uses boto3 to inspect the deployed security groups and report rules that expose resources to the public internet.
+`AWS EC2 API -> paginated collector -> pure rule evaluator -> JSON findings`
 
-## Skills demonstrated
+The web server uses user data rather than SSH for setup. Terraform currently
+relies on the account's default VPC and an automatically selected Amazon Linux
+2023 AMI. HTTP is deliberate lab scope; TLS, explicit networking, IMDS settings,
+and operating-system hardening remain future work.
 
-* Translating cloud architecture into declarative HashiCorp Configuration Language (HCL)
-* Bootstrapping EC2 instances without manual SSH using `user_data`
-* Using the AWS API from Python to enforce a security baseline
+## Test without AWS
 
-## Tech stack
+Python 3.12+ is sufficient for unit tests; they use a fake client.
 
-* **Cloud provider:** Amazon Web Services
-* **Infrastructure as code:** Terraform (`aws_instance`, `aws_security_group`, `data.aws_ami`)
-* **Bootstrapping:** Bash in `user_data`
-* **Security auditing:** Python 3.12, AWS SDK for Python (`boto3`)
-* **Compute:** Amazon Linux 2023 (`t3.micro`)
+```sh
+python -m unittest discover -s tests -v
+```
 
----
+Coverage includes IPv4/IPv6, all-protocol ingress, TCP port ranges, RDP, private
+CIDRs, expected HTTP traffic, and findings on later result pages. CI runs the
+same suite. These tests do not prove a live instance is reachable or secure.
 
-## 📸 Proof of Execution
+## Deploy and audit
 
-### 1. Terraform Deployment & State Output
-<img width="775" height="271" alt="terraform-apply" src="https://github.com/user-attachments/assets/0f6ba5c5-cc97-46a3-9dc4-e7824636f00b" />
+Requires Terraform, AWS credentials authorized to provision the lab, a default
+VPC in us-east-2, Python, and Boto3. Review costs before creating resources;
+instance type eligibility does not guarantee a free deployment.
 
-*Terraform output displaying dynamic public IP assignment and tracked state resources.*
-
-### 2. Live Web Server Verification
-<img width="735" height="116" alt="web-server-live" src="https://github.com/user-attachments/assets/dff3a7ef-8315-409f-9be8-04a50e5a420b" />
-
-*Browser confirmation reaching the Apache web server provisioned dynamically via user_data.*
-
-### 3. Automated Security Group Audit
-<img width="784" height="152" alt="python-audit" src="https://github.com/user-attachments/assets/33bbfcfa-65c0-4c84-baf4-0f85dc048a75" />
-
-*Custom Python script auditing AWS Security Groups to identify and report public internet exposures.*
-
----
-
-## 🚀 How to Run the Project
-
-### 1. Prerequisites
-- AWS CLI configured with active credentials (`aws configure`)
-- Terraform installed
-- Python 3.12+ and Boto3 installed (`pip install boto3`)
-
-### 2. Deploy the Infrastructure
-```bash
+```sh
 terraform init
-terraform plan
-terraform apply --auto-approve
+terraform fmt -check
+terraform validate
+terraform plan -out=lab.tfplan
+terraform apply lab.tfplan
+python -m pip install -r requirements.txt
+python audit_ec2.py --region us-east-2
 ```
 
-### 3. Run the audit
-```bash
-pip install boto3
-python audit_ec2.py
-```
+The auditor needs `ec2:DescribeSecurityGroups`; it does not modify AWS resources.
+It uses the standard AWS credential chain. It emits JSON and exits 0 with no
+management exposure, 1 with findings, or 2 if collection fails. Rules covering
+TCP/22 or TCP/3389 from `0.0.0.0/0` or `::/0`, including all-protocol rules,
+produce critical findings. HTTP/80 is not a management finding.
 
-### 4. Clean up
-```bash
+## Verify and clean up
+
+Visit the `web_url` Terraform output and confirm Apache responds. Compare JSON
+findings with the security-group configuration. Absence of findings is limited
+to these two ports; network routes, NACLs, prefix lists, credentials, and every
+other service are outside this checker.
+
+```sh
+terraform plan -destroy
 terraform destroy
 ```
-Run this when you are finished so the instance does not keep running and incurring charges.
 
----
+Confirm the instance is terminated after cleanup. Do not commit plans, state,
+credentials, or real account reports. `main.tf` contains infrastructure;
+`audit_ec2.py` contains collection/evaluation; `tests/` documents expected rules.
 
-## What the audit reports
-
-Security group rules that expose resources to the public internet (`0.0.0.0/0`). Port 80 open to the world is expected for a public web server. Management ports such as SSH (22) and RDP (3389) open to the world are the findings that matter.
-
-## What I would do next
-
-- [ ] Run `terraform fmt`, `validate` and Checkov in GitHub Actions
-- [ ] Output audit results as JSON and Markdown
-- [ ] Exit with a failing status when risky rules are found, so CI can block on it
-- [ ] Add variables and outputs files so the configuration is reusable
-
-## Author
-
-Mark Schwinn · [Website](https://markschwinn.com) · [LinkedIn](https://www.linkedin.com/in/mark-schwinn-994625362/)
+Next: explicit VPC/subnets, HTTPS, broader configurable checks, and policy scans.
+Contributions should add a failing rule fixture before changing audit behavior.
